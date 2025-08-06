@@ -1,57 +1,34 @@
-name: 🚀 Run Tests on Windows
+name: Run Tests on Windows
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  test:
-    name: 🔎 Run Tests on Windows
+  build_and_test:
     runs-on: windows-latest
 
     steps:
-      - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 🟢 Setup .NET 8
+      - name: Setup .NET SDK
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: 7.0.x
 
-      - name: 📦 Restore dependencies
-        run: dotnet restore SauceDemo_Tests/SauceDemo_Tests.csproj
+      - name: Restore dependencies
+        run: dotnet restore SauceDemo_Tests.csproj
 
-      - name: 🛠️ Build the project
-        run: dotnet build SauceDemo_Tests/SauceDemo_Tests.csproj --no-restore --configuration Release
+      - name: Build
+        run: dotnet build --no-restore SauceDemo_Tests.csproj
 
-      - name: 📦 Install Playwright
-        working-directory: SauceDemo_Tests
-        run: |
-          dotnet tool install --global Microsoft.Playwright.CLI
-          playwright install
+      - name: Run tests
+        run: dotnet test --no-build --verbosity normal SauceDemo_Tests.csproj
 
-      - name: 🧪 Run Tests with Allure
-        working-directory: SauceDemo_Tests
-        run: dotnet test --logger "trx" --results-directory allure-results
-
-      - name: 📤 Upload Allure Results
+      - name: Upload Test Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: allure-results
-          path: SauceDemo_Tests/allure-results
-
-      - name: 📤 Upload Test Videos
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-videos
-          path: SauceDemo_Tests/Test_recording
-
-      - name: 📤 Upload Screenshots
-        uses: actions/upload-artifact@v4
-        with:
-          name: screenshots
-          path: SauceDemo_Tests/Screenshots
+          name: TestResults
+          path: TestResults/
