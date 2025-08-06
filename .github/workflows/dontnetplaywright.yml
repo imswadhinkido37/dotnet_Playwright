@@ -1,48 +1,57 @@
-name: 🧪 Playwright Tests with Allure
+name: 🚀 Run Tests on Windows
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   test:
+    name: 🔎 Run Tests on Windows
     runs-on: windows-latest
 
-    env:
-      JAVA_HOME: C:\Program Files\Eclipse Adoptium\jdk-11.0.24.8-hotspot
-
     steps:
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v3
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
 
-      - name: 🧰 Setup .NET
+      - name: 🟢 Setup .NET 8
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: '8.0.x'
 
-      - name: 🧪 Install dependencies
-        run: dotnet restore
+      - name: 📦 Restore dependencies
+        run: dotnet restore SauceDemo_Tests/SauceDemo_Tests.csproj
 
-      - name: 🛠️ Build project
-        run: dotnet build --configuration Release
+      - name: 🛠️ Build the project
+        run: dotnet build SauceDemo_Tests/SauceDemo_Tests.csproj --no-restore --configuration Release
 
-      - name: 🧪 Run tests with NUnit
-        run: dotnet test --no-build --verbosity normal --logger:"trx;LogFileName=test-results.trx"
-
-      - name: ⬇️ Install Allure CLI
+      - name: 📦 Install Playwright
+        working-directory: SauceDemo_Tests
         run: |
-          choco install allure -y
-        shell: powershell
+          dotnet tool install --global Microsoft.Playwright.CLI
+          playwright install
 
-      - name: 📊 Generate Allure Report
-        run: |
-          allure generate --clean allure-results -o allure-report
-        continue-on-error: true
+      - name: 🧪 Run Tests with Allure
+        working-directory: SauceDemo_Tests
+        run: dotnet test --logger "trx" --results-directory allure-results
 
-      - name: 📤 Upload Allure Report as artifact
-        uses: actions/upload-artifact@v3
+      - name: 📤 Upload Allure Results
+        uses: actions/upload-artifact@v4
         with:
-          name: allure-report
-          path: allure-report
+          name: allure-results
+          path: SauceDemo_Tests/allure-results
+
+      - name: 📤 Upload Test Videos
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-videos
+          path: SauceDemo_Tests/Test_recording
+
+      - name: 📤 Upload Screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: SauceDemo_Tests/Screenshots
